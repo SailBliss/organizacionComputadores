@@ -1,2 +1,0 @@
-# Changelog
-Historial de cambios.
