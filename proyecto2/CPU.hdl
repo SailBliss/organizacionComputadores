@@ -1,0 +1,72 @@
+/**
+ * CPU.hdl - Central Processing Unit del computador Hack.
+ * Proyecto 2 - Arquitectura de Computadores.
+ */
+
+CHIP CPU {
+    IN  inM[16],    
+        instruction[16],
+        reset;          
+
+    OUT outM[16],   
+        writeM,         
+        addressM[15],   
+        pc[15];          
+
+    PARTS:
+
+    // instruction[15] == 0: Instrucción-A (Cargar constante en A)
+    // instruction[15] == 1: Instrucción-C (Calcular algo)
+    Not(in=instruction[15], out=isAInst);
+    Not(in=isAInst, out=isCInst);
+
+    // El registro A carga un valor si es una instrucción-A
+    // o si es una instrucción-C con el bit de destino 'A' activo (instruction[5]).
+    And(a=isCInst, b=instruction[5], out=isALoadC);
+    Or(a=isAInst, b=isALoadC, out=loadA);
+
+    // Si es Inst-A, entra la instrucción; si es Inst-C, entra la salida de la ALU.
+    Mux16(a=instruction, b=aluOut, sel=isCInst, out=inA);
+    ARegister(in=inA, load=loadA, out=outA, out[0..14]=addressM);
+
+    // instruction[12] es el bit 'a'. Si a=0, usamos A. Si a=1, usamos M (memoria).
+    Mux16(a=outA, b=inM, sel=instruction[12], out=outAM);
+
+    // Registro D: se carga solo si es instrucción-C y dest bit D activo (instruction[4]).
+    And(a=isCInst, b=instruction[4], out=loadD);
+    DRegister(in=aluOut, load=loadD, out=outD);
+
+    // ALU: x=D, y=A o M segun bit 'a'
+    // Fanout: aluOut se usa internamente; outM es la salida del chip hacia memoria.
+    // aluResult conecta el pin result para evitar pin de salida flotante.
+    ALU(x=outD, y=outAM,
+        zx=instruction[11], nx=instruction[10],
+        zy=instruction[9],  ny=instruction[8],
+        f=instruction[7],   no=instruction[6],
+        out=aluOut, out=outM,
+        zr=zr, ng=ng, out=aluResult);
+
+    // Solo escribimos en M si es instrucción-C y dest bit M activo (instruction[3]).
+    And(a=isCInst, b=instruction[3], out=writeM);
+
+    // Determinamos si el resultado es positivo
+    Not(in=zr, out=notZr);
+    Not(in=ng, out=notNg);
+    And(a=notZr, b=notNg, out=pos);
+
+    // Condiciones de salto
+    And(a=instruction[2], b=ng,  out=jlt); // Jump if Less Than
+    And(a=instruction[1], b=zr,  out=jeq); // Jump if Equal
+    And(a=instruction[0], b=pos, out=jgt); // Jump if Greater Than
+
+    Or(a=jlt, b=jeq, out=jle);
+    Or(a=jle, b=jgt, out=jumpCondition);
+
+    // Solo saltamos si es instrucción-C
+    And(a=isCInst, b=jumpCondition, out=doJump);
+
+    // Si no hay salto, el PC incrementa
+    Not(in=doJump, out=inc);
+
+    PC(in=outA, load=doJump, inc=inc, reset=reset, out[0..14]=pc);
+}
