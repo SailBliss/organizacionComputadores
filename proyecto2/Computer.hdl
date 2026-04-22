@@ -1,0 +1,20 @@
+// Implementation of the Hack Computer Chip
+CHIP Computer {
+
+    IN reset;
+
+    PARTS:
+    // Recibe la dirección del PC (Program Counter) del CPU.
+    ROM32K(address=pc, out=instruction);
+
+    // - inM: Recibe el dato de la RAM (outM del chip Memory).
+    // - instruction: Recibe la instrucción actual de la ROM.
+    // - reset: Señal externa para reiniciar el programa.
+    CPU(inM=memOut, instruction=instruction, reset=reset, 
+        outM=outM, writeM=writeM, addressM=addressM, pc=pc);
+
+    // - in: El valor que el CPU quiere escribir (outM).
+    // - load: La señal de permiso de escritura del CPU (writeM).
+    // - address: La dirección donde el CPU quiere leer o escribir (addressM).
+    Memory(in=outM, load=writeM, address=addressM, out=memOut);
+}
