@@ -1,0 +1,53 @@
+/**
+ * Shifter.hdl - Componente de desplazamiento de bits de 16 bits.
+ * * Proyecto: Proyecto 2 - Sistemas Empotrados / Arquitectura de Computadores.
+ * Autores: [Tu Nombre] & [Nombre de tu compañero]
+ * * DESCRIPCIÓN:
+ * Desplaza el bus de entrada 'in' un bit hacia la izquierda o derecha
+ * dependiendo de la señal de control 'direction'.
+ * * ALGORITMO:
+ * - Si direction == 0 (Izquierda): out[0] = 0, out[i] = in[i-1], result = in[15]
+ * - Si direction == 1 (Derecha): out[15] = 0, out[i] = in[i+1], result = in[0]
+ */
+
+CHIP Shifter {
+    IN in[16],       // Dato de entrada de 16 bits a desplazar.
+       direction;    // 0 para desplazamiento a la izquierda, 1 para la derecha.
+    OUT out[16],     // El bus de 16 bits ya desplazado.
+        result;      // El bit que "desborda" o sale del bus original.
+
+    PARTS:
+    /* * SELECCIÓN DE BUS DESPLAZADO:
+     * Implementamos una arquitectura modular usando un Mux16 para decidir
+     * entre dos configuraciones de cableado predefinidas.
+     */
+    Mux16(
+        /* * Opción A (direction=0): Desplazamiento a la IZQUIERDA.
+         * Se rellena el bit 0 con 'false' (0) y se desplazan los demás.
+         */
+        a[0]=false,
+        a[1]=in[0], a[2]=in[1], a[3]=in[2], a[4]=in[3],
+        a[5]=in[4], a[6]=in[5], a[7]=in[6], a[8]=in[7],
+        a[9]=in[8], a[10]=in[9], a[11]=in[10], a[12]=in[11],
+        a[13]=in[12], a[14]=in[13], a[15]=in[14],
+
+        /* * Opción B (direction=1): Desplazamiento a la DERECHA.
+         * Se rellena el bit 15 con 'false' (0) y se desplazan los demás hacia abajo.
+         */
+        b[0]=in[1], b[1]=in[2], b[2]=in[3], b[3]=in[4],
+        b[4]=in[5], b[5]=in[6], b[6]=in[7], b[7]=in[8],
+        b[8]=in[9], b[9]=in[10], b[10]=in[11], b[11]=in[12],
+        b[12]=in[13], b[13]=in[14], b[14]=in[15],
+        b[15]=false,
+
+        sel=direction,
+        out=out
+    );
+
+    /* * SALIDA DE BIT RESULTANTE:
+     * Dependiendo de la dirección, el bit que "sale" es distinto.
+     * Izquierda (0) -> Sale el bit más significativo (in[15]).
+     * Derecha (1)   -> Sale el bit menos significativo (in[0]).
+     */
+    Mux(a=in[15], b=in[0], sel=direction, out=result);
+}
