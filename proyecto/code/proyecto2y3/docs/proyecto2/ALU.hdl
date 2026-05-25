@@ -1,0 +1,70 @@
+/**
+ * ALU.hdl - Unidad Aritmético Lógica con Shifter integrado.
+ * Basado en la arquitectura de Nand2Tetris para el Proyecto 2.
+ */
+
+CHIP ALU {
+    IN  
+        x[16], y[16],  // Entradas de 16 bits
+        zx, nx, zy, ny, f, no;
+
+    OUT 
+        out[16],       // Salida de 16 bits
+        zr,           // 1 si out == 0, de lo contrario 0
+        ng,           // 1 si out < 0, de lo contrario 0
+        result;       // Bit que sale del shifter
+
+    PARTS:
+    // --- PREPROCESAMIENTO DE X ---
+    Mux16(a=x, b=false, sel=zx, out=x1);
+    Not16(in=x1, out=notX1);
+    Mux16(a=x1, b=notX1, sel=nx, out=xFinal);
+
+    // --- PREPROCESAMIENTO DE Y ---
+    Mux16(a=y, b=false, sel=zy, out=y1);
+    Not16(in=y1, out=notY1);
+    Mux16(a=y1, b=notY1, sel=ny, out=yFinal);
+
+    // --- FUNCIÓN ALU ESTÁNDAR ---
+    Add16(a=xFinal, b=yFinal, out=addXY);
+    And16(a=xFinal, b=yFinal, out=andXY);
+    Mux16(a=andXY, b=addXY, sel=f, out=outALU);
+
+    // --- INTEGRACIÓN DEL SHIFTER ---
+    // El Shifter opera sobre la entrada original X con f como dirección.
+    Shifter(in=x, direction=f, out=outShift, result=resShift);
+
+    // --- DETECTOR DE CONDICIÓN SHIFT ---
+    // Se activa cuando: zx=0, nx=0, zy=0, ny=0, no=1
+    Not(in=zx, out=nzx);
+    Not(in=nx, out=nnx);
+    Not(in=zy, out=nzy);
+    Not(in=ny, out=nny);
+    And(a=nzx, b=nnx, out=c1);
+    And(a=nzy, b=nny, out=c2);
+    And(a=c1, b=c2, out=condBase);
+    And(a=condBase, b=no, out=isShift);
+
+    // --- SALIDA NORMAL ALU (con posible negación 'no') ---
+    Not16(in=outALU, out=notOutALU);
+    Mux16(a=outALU, b=notOutALU, sel=no, out=outNormal);
+
+    // --- SELECCIÓN FINAL: ALU normal vs Shifter ---
+    // Se extraen sub-buses en la misma declaración para calcular zr/ng
+    Mux16(a=outNormal, b=outShift, sel=isShift,
+          out[0..7]=low, out[8..15]=high, out[15]=msb, out=out);
+
+    // --- SALIDA result ---
+    // Solo propaga el bit del shifter si isShift está activo
+    Mux(a=false, b=resShift, sel=isShift, out=result);
+
+    // --- INDICADORES DE ESTADO ---
+    // ng: negativo si MSB == 1
+    And(a=msb, b=true, out=ng);
+
+    // zr: cero si todos los bits son 0
+    Or8Way(in=low, out=orLow);
+    Or8Way(in=high, out=orHigh);
+    Or(a=orLow, b=orHigh, out=notZr);
+    Not(in=notZr, out=zr);
+}

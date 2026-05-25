@@ -1,0 +1,115 @@
+/***************************************************************************
+ * design.txt - Especificación de la Arquitectura de Instrucción (ISA)
+ * Proyecto 2: Extensión de la Unidad Aritmético Lógica (ALU)
+ * Autor: Eder Santiago Ceballos QuirozI, Isabela Ruiz
+ ***************************************************************************/
+
+1. DESCRIPCIÓN GENERAL
+----------------------
+Se definen dos nuevas instrucciones de desplazamiento (Shift) para la arquitectura 
+del computador Hack. Estas instrucciones permiten desplazar un bus de 16 bits 
+una posición a la izquierda o a la derecha en un solo ciclo de reloj.
+
+IMPORTANTE: El desplazamiento se aplica sobre la entrada X de la ALU, la cual
+corresponde al contenido del Registro D.
+
+---
+
+2. FORMATO DE LA INSTRUCCIÓN (TIPO C)
+-------------------------------------
+Binario: [1 1 1] [a] [c1 c2 c3 c4 c5 c6] [d1 d2 d3] [j1 j2 j3]
+
+Donde:
+- Bits 15-13: "111" → Instrucción Tipo C
+- Bit 12 (a): Selección de operando Y (0=A, 1=M)
+- Bits 11-6 (c1..c6): Control de la ALU
+- Bits 5-3 (d1..d3): Registro destino
+- Bits 2-0 (j1..j3): Saltos
+
+---
+
+3. MAPEO DE BITS DE CONTROL (ALU)
+---------------------------------
+
+Condición de activación del Shifter:
+zx=0, nx=0, zy=0, ny=0, no=1
+
+El bit f define la dirección.
+
+A. SHIFT LEFT (<<)
+------------------
+Sintaxis: dest = D << 1
+
+Bits:
+c1..c6 = 0 0 0 0 0 1
+
+Equivalente:
+zx=0 nx=0 zy=0 ny=0 f=0 no=1
+
+---
+
+B. SHIFT RIGHT (>>)
+-------------------
+Sintaxis: dest = D >> 1
+
+Bits:
+c1..c6 = 0 0 0 0 1 1
+
+Equivalente:
+zx=0 nx=0 zy=0 ny=0 f=1 no=1
+
+---
+
+4. EJEMPLOS DE CODIFICACIÓN
+---------------------------
+
+A. D = D << 1
+
+Binario:
+111 0 000001 010 000
+
+Explicación:
+- 111 → instrucción tipo C
+- a = 0 → se usa A como operando Y (irrelevante en este caso)
+- 000001 → operación Shift Left
+- 010 → destino D
+- 000 → sin salto
+
+---
+
+B. D = D >> 1
+
+Binario:
+111 0 000011 010 000
+
+---
+
+C. AM = D << 1
+
+Binario: 111 0 000001 101 000
+- 101 → escribe en A y M
+
+---
+
+5. JUSTIFICACIÓN TÉCNICA
+------------------------
+
+Se seleccionó la combinación (c1..c6) = 0000x1 debido a que no colisiona
+con operaciones existentes en la ALU original.
+
+El bit no actúa como habilitador del modo Shift.
+
+El bit f se reutiliza como selector de dirección:
+- f = 0 → desplazamiento izquierda
+- f = 1 → desplazamiento derecha
+
+Esto permite extender la funcionalidad sin modificar el tamaño de la instrucción.
+
+---
+
+6. LIMITACIONES
+----------------
+
+- El desplazamiento solo se aplica al Registro D (entrada X de la ALU).
+- No es posible desplazar directamente A o M sin pasos intermedios.
+- Solo se permite desplazamiento de 1 bit por instrucción.
