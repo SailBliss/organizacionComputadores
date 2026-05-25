@@ -1,0 +1,75 @@
+class Player {
+    field int x, y;
+    field int dx, dy; // Dirección persistente
+    field Map map;
+
+    constructor Player new(int startX, int startY, Map gameMap) {
+        let x = startX; 
+        let y = startY; 
+        let dx = 0; // Inicialmente quieto
+        let dy = 0;
+        let map = gameMap;
+        do draw();
+        return this;
+    }
+
+    method int getX() { return x; }
+    method int getY() { return y; }
+
+    /** Cambia la dirección de movimiento */
+    method void setDirection(int newDx, int newDy) {
+        let dx = newDx;
+        let dy = newDy;
+        return;
+    }
+
+    /** Mueve al jugador una celda por frame */
+    method void update() {
+        var int nextX, nextY;
+        
+        // Si no hay dirección, no se mueve
+        if ((dx = 0) & (dy = 0)) {
+            return;
+        }
+
+        let nextX = x + dx; 
+        let nextY = y + dy;
+
+        // Validar colisión contra muros
+        if (~map.isWall(nextX, nextY)) {
+            do erase();
+            let x = nextX; 
+            let y = nextY;
+            do draw();
+        } else {
+            // Detener movimiento si choca contra muro
+            let dx = 0;
+            let dy = 0;
+        }
+        return;
+    }
+
+    method boolean collidesWith(int enemyX, int enemyY) {
+        if ((x = enemyX) & (y = enemyY)) {
+            return true;
+        }
+        return false;
+    }
+
+    method void draw() {
+        do Screen.setColor(true);
+        do Screen.drawCircle((x * 16) + 8, (y * 16) + 8, 6);
+        return;
+    }
+
+    method void erase() {
+        do Screen.setColor(false);
+        do Screen.drawRectangle(x * 16, y * 16, (x * 16) + 15, (y * 16) + 15);
+        return;
+    }
+
+    method void dispose() { 
+        do Memory.deAlloc(this); 
+        return; 
+    }
+}

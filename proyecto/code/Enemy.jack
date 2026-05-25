@@ -1,0 +1,140 @@
+class Enemy {
+    field int x, y;
+    field int targetDx, targetDy;
+    field Map map;
+    
+    // Variables para el algoritmo BFS
+    field Array distMap; 
+    field Array queue;   
+    field int head, tail;
+
+    constructor Enemy new(int startX, int startY, Map gameMap) {
+        let x = startX;
+        let y = startY;
+        let targetDx = 0;
+        let targetDy = 0;
+        let map = gameMap;
+        
+        // Inicializamos arreglos para el BFS (32x16 = 512 celdas)
+        let distMap = Array.new(512);
+        let queue = Array.new(512);
+        
+        do draw();
+        return this;
+    }
+    method int getX() {
+        return x;
+    }
+
+    method int getY() {
+        return y;
+    }
+    /** Algoritmo BFS: Encuentra el camino más corto al jugador */
+    method void calculateDirection(int px, int py) {
+        var int i, current, curX, curY;
+
+        // 1. Resetear distMap a -1 (no visitado)
+        let i = 0;
+        while (i < 512) { let distMap[i] = -1; let i = i + 1; }
+
+        // 2. Iniciar BFS desde la posición del jugador
+        let head = 0; let tail = 0;
+        let current = (py * 32) + px;
+        let distMap[current] = 0;
+        let queue[tail] = current;
+        let tail = tail + 1;
+
+        // 3. Proceso de inundación
+        while (head < tail) {
+            let current = queue[head];
+            let head = head + 1;
+            let curX = current - ((current / 32) * 32);
+            let curY = current / 32;
+
+            do checkNeighbor(curX + 1, curY, distMap[current]);
+            do checkNeighbor(curX - 1, curY, distMap[current]);
+            do checkNeighbor(curX, curY + 1, distMap[current]);
+            do checkNeighbor(curX, curY - 1, distMap[current]);
+        }
+
+        // 4. Elegir el mejor movimiento
+        do chooseBestMove();
+        return;
+    }
+
+    method void checkNeighbor(int nx, int ny, int currentDist) {
+        var int idx;
+        if ((nx > -1) & (nx < 32) & (ny > -1) & (ny < 16)) {
+            if (~map.isWall(nx, ny)) {
+                let idx = (ny * 32) + nx;
+                if (distMap[idx] = -1) {
+                    let distMap[idx] = currentDist + 1;
+                    let queue[tail] = idx;
+                    let tail = tail + 1;
+                }
+            }
+        }
+        return;
+    }
+
+    method void chooseBestMove() {
+        var int bestDist, i, testX, testY, neighborDist, bestDx, bestDy;
+        let bestDist = 10000;
+        let bestDx = 0; let bestDy = 0;
+        let i = 0;
+        
+        while (i < 4) {
+            let testX = x; let testY = y;
+            if (i=0) { let testX = x+1; } if (i=1) { let testX = x-1; }
+            if (i=2) { let testY = y+1; } if (i=3) { let testY = y-1; }
+            
+            if (~map.isWall(testX, testY)) {
+                let neighborDist = distMap[(testY * 32) + testX];
+                if ((neighborDist > -1) & (neighborDist < bestDist)) {
+                    let bestDist = neighborDist;
+                    let bestDx = testX - x; 
+                    let bestDy = testY - y;
+                }
+            }
+            let i = i + 1;
+        }
+        let targetDx = bestDx;
+        let targetDy = bestDy;
+        return; // <--- ESTO SOLUCIONA EL ERROR
+    }
+
+    method void update() {
+        var int nextX, nextY;
+        if (~(targetDx = 0) | ~(targetDy = 0)) {
+            let nextX = x + targetDx;
+            let nextY = y + targetDy;
+            if (~map.isWall(nextX, nextY)) {
+                do erase();
+                let x = nextX;
+                let y = nextY;
+                do draw();
+            }
+        }
+        return;
+    }
+
+    // Métodos estándar (draw, erase, dispose)
+    method void draw() {
+        do Screen.setColor(true);
+        do Screen.drawRectangle((x * 16) + 2, (y * 16) + 2, (x * 16) + 13, (y * 16) + 13);
+        return;
+    }
+
+    method void erase() {
+        do Screen.setColor(false);
+        do Screen.drawRectangle(x * 16, y * 16, (x * 16) + 15, (y * 16) + 15);
+        return;
+    }
+
+    method void dispose() { 
+        do distMap.dispose();
+        do queue.dispose();
+        do Memory.deAlloc(this); 
+        return; 
+    }
+}

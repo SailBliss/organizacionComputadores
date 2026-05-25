@@ -1,0 +1,89 @@
+class MazeGame {
+    field Map map;
+    field Player player;
+    field Enemy enemy;
+    field boolean exit;
+    field int moveCounter; // 1. Declaración de la variable
+
+    constructor MazeGame new() {
+        var int enemyX, enemyY;
+        var boolean validSpawn;
+        
+        // Inicializar componentes
+        let map = Map.new(32, 16); 
+        do map.draw();
+        let player = Player.new(1, 1, map);
+        
+        // Spawn aleatorio del enemigo
+        let validSpawn = false;
+        while (~validSpawn) {
+            let enemyX = Random.randRange(32);
+            let enemyY = Random.randRange(16);
+            
+            if (map.getTile(enemyX, enemyY) = 0) {
+                let validSpawn = true;
+            }
+        }
+        let enemy = Enemy.new(enemyX, enemyY, map);
+        
+        let exit = false;
+        let moveCounter = 0; // 2. Inicialización obligatoria
+        return this;
+    }
+    
+    method void run() {
+        var char key;
+        
+        while (~exit) {
+            // A. CONTROL DE USUARIO (Siempre activo para evitar lag)
+            let key = Keyboard.keyPressed();
+            if (key = 131) { do player.setDirection(0, -1); } // Arriba
+            if (key = 133) { do player.setDirection(0, 1); }  // Abajo
+            if (key = 130) { do player.setDirection(-1, 0); } // Izquierda
+            if (key = 132) { do player.setDirection(1, 0); }  // Derecha
+            if (key = 140) { let exit = true; }                // Esc
+            
+            // B. MOVIMIENTO SINCRONIZADO (Controlado por contador)
+            let moveCounter = moveCounter + 1;
+            
+            // Ajusta este número (ej. 3, 5, 10) para cambiar la velocidad.
+            // Mayor número = movimiento más lento.
+            if (moveCounter > 3) {
+                do player.update();
+                
+                // IA Implacable
+                do enemy.calculateDirection(player.getX(), player.getY());
+                do enemy.update();
+                
+                let moveCounter = 0; // Reiniciamos el contador
+            }
+            
+            // C. LÓGICA DE ESTADOS (Siempre comprobamos colisión)
+            if (player.collidesWith(enemy.getX(), enemy.getY())) {
+                do Output.moveCursor(11, 27);
+                do Output.printString("GAME OVER!");
+                let exit = true;
+            } else {
+                if (map.isExit(player.getX(), player.getY())) {
+                    do Output.moveCursor(11, 27);
+                    do Output.printString("VICTORIA!");
+                    let exit = true;
+                }
+            }
+            
+            // D. VELOCIDAD DEL BUCLE
+            // Mantén esto bajo (20-50) para que el teclado se sienta ultra rápido.
+            do Sys.wait(10); 
+        }
+        
+        return;
+    }
+    
+    method void dispose() {
+        do map.dispose();
+        do player.dispose();
+        do enemy.dispose();
+        do Memory.deAlloc(this);
+        return;
+    }
+}

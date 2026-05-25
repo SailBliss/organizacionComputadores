@@ -1,0 +1,26 @@
+class Main {
+    function void main() {
+        var int seedCounter;
+        var MazeGame game;
+        
+        let seedCounter = 0;
+        do Output.moveCursor(11, 20);
+        do Output.printString("Presione ESPACIO para iniciar");
+        
+        // Ciclo de espera para generar entropía (semilla aleatoria)
+        while (Keyboard.keyPressed() = 0) {
+            let seedCounter = seedCounter + 1;
+            if (seedCounter > 32000) { let seedCounter = 0; }
+        }
+        
+        do Screen.clearScreen();
+        do Random.setSeed(seedCounter);
+        
+        // Iniciar el juego
+        let game = MazeGame.new();
+        do game.run();
+        do game.dispose();
+        
+        return;
+    }
+}

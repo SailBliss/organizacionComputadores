@@ -1,0 +1,30 @@
+/** Generador de números pseudoaleatorios básico */
+class Random {
+    static int seed;
+
+    function void setSeed(int newSeed) {
+        let seed = newSeed;
+        return;
+    }
+
+    /** Retorna un número entre 0 y max - 1 */
+    function int randRange(int max) {
+        var int a, c, m, div;
+        
+        let a = 25173; 
+        let c = 13849;
+        let m = 32767;
+        
+        let seed = (a * seed) + c;
+        
+        // Operación de módulo simulada: seed % m
+        let div = seed / m;
+        let seed = seed - (div * m);
+        
+        if (seed < 0) { let seed = -seed; }
+        
+        // Módulo final
+        let div = seed / max;
+        return seed - (div * max);
+    }
+}

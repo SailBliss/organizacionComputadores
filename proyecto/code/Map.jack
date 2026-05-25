@@ -1,0 +1,136 @@
+/**
+ * Clase Map: Almacena el laberinto y maneja las colisiones.
+ */
+class Map {
+    field int width, height;
+    field Array grid; 
+
+    constructor Map new(int w, int h) {
+        var int i;
+        
+        let width = w;
+        let height = h;
+        let grid = Array.new(height);
+        
+        let i = 0;
+        while (i < height) {
+            let grid[i] = Array.new(width);
+            let i = i + 1;
+        }
+        
+       // --- LABERINTO COMPLEJO (Rutas no lineales y callejones sin salida) ---
+        do loadRow(0,  "11111111111111111111111111111111");
+        do loadRow(1,  "10000000000001000001000000000001");
+        do loadRow(2,  "10111111111101011101011111111001");
+        do loadRow(3,  "10000000010000000000000001000001");
+        do loadRow(4,  "11111110101111111111111010111101");
+        do loadRow(5,  "10000000100000010000000010000001");
+        do loadRow(6,  "10111111111110101111101111111001");
+        do loadRow(7,  "10100000000000000000100000001001");
+        do loadRow(8,  "10101111111111111011101111111001");
+        do loadRow(9,  "10101000000000000010100000000001");
+        do loadRow(10, "10101011111111101110111111101001");
+        do loadRow(11, "10100000000000000000000000001001");
+        do loadRow(12, "10111101111111101111111111111001");
+        do loadRow(13, "10000000000000001000000000000001");
+        do loadRow(14, "11111111111111111111111111111021");
+        do loadRow(15, "11111111111111111111111111111111");
+        
+        return this;
+    }
+
+    /** Parsea un String y asigna los valores a la matriz */
+    method void loadRow(int y, String rowData) {
+        var Array row;
+        var int x;
+        var char c;
+        
+        let row = grid[y];
+        let x = 0;
+        
+        while (x < width) {
+            let c = rowData.charAt(x);
+            
+            if (c = 49) { let row[x] = 1; } // ASCII 49 es '1'
+            if (c = 48) { let row[x] = 0; } // ASCII 48 es '0'
+            if (c = 50) { let row[x] = 2; } // ASCII 50 es '2'
+            
+            let x = x + 1;
+        }
+        
+        do rowData.dispose(); 
+        return;
+    }
+
+    method int getWidth() { return width; }
+    method int getHeight() { return height; }
+
+    method boolean isValidPosition(int x, int y) {
+        return (~(x < 0) & (x < width) & ~(y < 0) & (y < height));
+    }
+
+    method int getTile(int x, int y) {
+        var Array row;
+        if (isValidPosition(x, y)) {
+            let row = grid[y];
+            return row[x];
+        }
+        return -1; 
+    }
+
+    method boolean isWall(int x, int y) {
+        if (isValidPosition(x, y)) {
+            return (getTile(x, y) = 1);
+        }
+        return true; 
+    }
+
+    method boolean isExit(int x, int y) {
+        if (isValidPosition(x, y)) {
+            return (getTile(x, y) = 2);
+        }
+        return false;
+    }
+
+    /** Dibuja el estado inicial del laberinto en pantalla */
+    method void draw() {
+        var int i, j;
+        var Array row;
+        
+        let i = 0;
+        while (i < height) {
+            let j = 0;
+            let row = grid[i];
+            
+            while (j < width) {
+                if (row[j] = 1) { 
+                    do Screen.setColor(true);
+                    do Screen.drawRectangle(j * 16, i * 16, (j * 16) + 15, (i * 16) + 15);
+                }
+                if (row[j] = 2) { 
+                    do Screen.setColor(true);
+                    do Screen.drawRectangle(j * 16, i * 16, (j * 16) + 15, (i * 16) + 15);
+                    do Screen.setColor(false);
+                    do Screen.drawRectangle((j * 16) + 4, (i * 16) + 4, (j * 16) + 11, (i * 16) + 11);
+                }
+                let j = j + 1;
+            }
+            let i = i + 1;
+        }
+        return;
+    }
+
+    method void dispose() {
+        var int i;
+        var Array row;
+        let i = 0;
+        while (i < height) {
+            let row = grid[i];
+            do row.dispose(); 
+            let i = i + 1;
+        }
+        do grid.dispose(); 
+        do Memory.deAlloc(this);
+        return;
+    }
+}
