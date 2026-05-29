@@ -1,6 +1,6 @@
 class Player {
     field int x, y;
-    field int dx, dy; // Dirección persistente
+    field int dx, dy; 
     field Map map;
 
     constructor Player new(int startX, int startY, Map gameMap) {

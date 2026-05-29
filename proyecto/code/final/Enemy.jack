@@ -33,7 +33,7 @@ class Enemy {
     method void calculateDirection(int px, int py) {
         var int i, current, curX, curY;
 
-        // 1. Resetear distMap a -1 (no visitado)
+        // 1. Resetear distMap a -1
         let i = 0;
         while (i < 512) { let distMap[i] = -1; let i = i + 1; }
 
@@ -118,7 +118,6 @@ class Enemy {
         return;
     }
 
-    // Métodos estándar (draw, erase, dispose)
     method void draw() {
         do Screen.setColor(true);
         do Screen.drawRectangle((x * 16) + 2, (y * 16) + 2, (x * 16) + 13, (y * 16) + 13);

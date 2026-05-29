@@ -7,7 +7,7 @@ class Main {
         do Output.moveCursor(11, 20);
         do Output.printString("Presione ESPACIO para iniciar");
         
-        // Ciclo de espera para generar entropía (semilla aleatoria)
+        // Ciclo de espera para generar entropía
         while (Keyboard.keyPressed() = 0) {
             let seedCounter = seedCounter + 1;
             if (seedCounter > 32000) { let seedCounter = 0; }

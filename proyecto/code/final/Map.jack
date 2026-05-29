@@ -18,7 +18,7 @@ class Map {
             let i = i + 1;
         }
         
-       // --- LABERINTO COMPLEJO (Rutas no lineales y callejones sin salida) ---
+       // --- LABERINTO
         do loadRow(0,  "11111111111111111111111111111111");
         do loadRow(1,  "10000000000001000001000000000001");
         do loadRow(2,  "10111111111101011101011111111001");
